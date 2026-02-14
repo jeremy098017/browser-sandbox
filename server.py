@@ -3,12 +3,10 @@ from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
 
-# root health check
 @app.route("/")
 def root():
-    return "browser sandbox running", 200
+    return "OK", 200
 
-# explicit health endpoint
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"}), 200
@@ -23,9 +21,17 @@ def browse():
         return jsonify({"error": "Missing url"}), 400
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
+            ]
+        )
+
         page = browser.new_page()
-        page.goto(url, wait_until="networkidle")
+        page.goto(url, wait_until="networkidle", timeout=60000)
 
         result = {
             "title": page.title(),
