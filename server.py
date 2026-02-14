@@ -1,9 +1,30 @@
-from flask import Flask
+from fastapi import FastAPI
+from playwright.sync_api import sync_playwright
 
-app = Flask(__name__)
+app = FastAPI()
 
-@app.route("/")
+browser = None
+page = None
+
+@app.on_event("startup")
+def start_browser():
+    global browser, page
+    p = sync_playwright().start()
+    browser = p.chromium.launch(
+        headless=True,
+        args=["--no-sandbox"]
+    )
+    page = browser.new_page()
+
+@app.get("/")
 def home():
-    return "Browser sandbox running!"
+    return {"status": "running"}
 
-app.run(host="0.0.0.0", port=8080)
+@app.get("/goto")
+def goto(url: str):
+    page.goto(url)
+    return {"status": "ok"}
+
+@app.get("/html")
+def html():
+    return {"html": page.content()}
