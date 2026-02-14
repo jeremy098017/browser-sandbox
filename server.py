@@ -4,8 +4,9 @@ from playwright.sync_api import sync_playwright
 app = Flask(__name__)
 
 @app.route("/")
-def home():
-    return "Browser sandbox running!"
+def health():
+    return "OK", 200
+
 
 @app.route("/browse", methods=["POST"])
 def browse():
@@ -20,14 +21,14 @@ def browse():
         page = browser.new_page()
         page.goto(url, wait_until="networkidle")
 
-        content = page.content()
-        title = page.title()
+        result = {
+            "title": page.title(),
+            "html": page.content()
+        }
 
         browser.close()
+        return jsonify(result)
 
-    return jsonify({
-        "title": title,
-        "html": content
-    })
 
-app.run(host="0.0.0.0", port=8080)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
