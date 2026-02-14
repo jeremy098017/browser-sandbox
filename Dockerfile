@@ -3,6 +3,6 @@ FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
 WORKDIR /app
 COPY server.py .
 
-RUN pip install fastapi uvicorn
+RUN pip install flask
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["python", "server.py"]

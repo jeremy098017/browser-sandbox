@@ -1,30 +1,33 @@
-from fastapi import FastAPI
+from flask import Flask, request, jsonify
 from playwright.sync_api import sync_playwright
 
-app = FastAPI()
+app = Flask(__name__)
 
-browser = None
-page = None
-
-@app.on_event("startup")
-def start_browser():
-    global browser, page
-    p = sync_playwright().start()
-    browser = p.chromium.launch(
-        headless=True,
-        args=["--no-sandbox"]
-    )
-    page = browser.new_page()
-
-@app.get("/")
+@app.route("/")
 def home():
-    return {"status": "running"}
+    return "Browser sandbox running!"
 
-@app.get("/goto")
-def goto(url: str):
-    page.goto(url)
-    return {"status": "ok"}
+@app.route("/browse", methods=["POST"])
+def browse():
+    data = request.json
+    url = data.get("url")
 
-@app.get("/html")
-def html():
-    return {"html": page.content()}
+    if not url:
+        return jsonify({"error": "Missing url"}), 400
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, wait_until="networkidle")
+
+        content = page.content()
+        title = page.title()
+
+        browser.close()
+
+    return jsonify({
+        "title": title,
+        "html": content
+    })
+
+app.run(host="0.0.0.0", port=8080)
