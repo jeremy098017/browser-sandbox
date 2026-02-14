@@ -3,9 +3,15 @@ from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
 
+# root health check
 @app.route("/")
+def root():
+    return "browser sandbox running", 200
+
+# explicit health endpoint
+@app.route("/health")
 def health():
-    return "OK", 200
+    return jsonify({"status": "ok"}), 200
 
 
 @app.route("/browse", methods=["POST"])
