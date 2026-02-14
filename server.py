@@ -4,12 +4,8 @@ from playwright.sync_api import sync_playwright
 app = Flask(__name__)
 
 @app.route("/")
-def root():
-    return "OK", 200
-
-@app.route("/health")
 def health():
-    return jsonify({"status": "ok"}), 200
+    return "OK", 200
 
 
 @app.route("/browse", methods=["POST"])
@@ -21,17 +17,9 @@ def browse():
         return jsonify({"error": "Missing url"}), 400
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu"
-            ]
-        )
-
+        browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        page.goto(url, wait_until="networkidle", timeout=60000)
+        page.goto(url, wait_until="networkidle")
 
         result = {
             "title": page.title(),
@@ -44,3 +32,4 @@ def browse():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
